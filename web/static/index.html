@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>RSS订阅系统</title>
+    <style>
+        :root {
+            /* 主色调 - 现代蓝色系 */
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-subtle: #eff6ff;
+
+            /* 辅助色 */
+            --accent: #8b5cf6;
+            --accent-dark: #7c3aed;
+            --accent-light: #a78bfa;
+
+            /* 状态色 */
+            --danger: #ef4444;
+            --danger-subtle: #fef2f2;
+            --warning: #f59e0b;
+            --warning-subtle: #fffbeb;
+            --success: #10b981;
+            --success-subtle: #ecfdf5;
+            --info: #06b6d4;
+            --info-subtle: #ecfeff;
+
+            /* 中性色 - 更现代的灰度 */
+            --bg: #f1f5f9;
+            --bg-elevated: #ffffff;
+            --bg-subtle: #f8fafc;
+            --card-bg: #ffffff;
+
+            /* 文字色 */
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-inverse: #ffffff;
+
+            /* 边框和分割 */
+            --border: #e2e8f0;
+            --border-subtle: #f1f5f9;
+            --divider: #e2e8f0;
+
+            /* 阴影 - 更精致的层次感 */
+            --shadow-xs: 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.03);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.03);
+            --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.1);
+
+            /* 圆角 - 更现代 */
+            --radius-xs: 4px;
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+
+            /* 间距系统 - 更紧凑 */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+
+            /* 字体 */
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+            --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+
+            /* 字号系统 */
+            --text-xs: 0.75rem;
+            --text-sm: 0.8125rem;
+            --text-base: 0.9375rem;
+            --text-lg: 1.0625rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            font-size: var(--text-base);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* 响应式容器 - 更紧凑 */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: var(--space-4);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: var(--space-3); }
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: var(--space-2); }
+            html { font-size: 14px; }
+        }
+
+        /* 现代化头部 - 更紧凑 */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-inverse);
+            padding: var(--space-4) var(--space-5);
+            margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-5) calc(-1 * var(--space-4));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .header h1::before {
+            content: "";
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M4 11a9 9 0 0 1 9 9'/%3E%3Cpath d='M4 4a16 16 0 0 1 16 16'/%3E%3Ccircle cx='5' cy='19' r='1'/%3E%3C/svg%3E") center/contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M4 11a9 9 0 0 1 9 9'/%3E%3Cpath d='M4 4a16 16 0 0 1 16 16'/%3E%3Ccircle cx='5' cy='19' r='1'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                gap: var(--space-3);
+                padding: var(--space-3);
+                margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) var(--space-4) calc(-1 * var(--space-2));
+            }
+            .header h1 { font-size: var(--text-xl); }
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* 响应式标签页 - 更紧凑 */
+        .tabs {
+            display: flex;
+            gap: var(--space-1);
+            margin-bottom: var(--space-5);
+            flex-wrap: wrap;
+            padding: var(--space-1);
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: var(--space-2) var(--space-4);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: var(--text-base);
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg-subtle);
+            color: var(--text);
+        }
+
+        .tab:active {
+            transform: scale(0.97);
+        }
+
+        @media (max-width: 640px) {
+            .tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: var(--space-1);
+            }
+            .tabs::-webkit-scrollbar { display: none; }
+            .tab {
+                padding: var(--space-2) var(--space-3);
+                font-size: var(--text-base);
+            }
+        }
+
+        /* 现代化卡片 - 更紧凑 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 640px) {
+            .card { padding: var(--space-3); }
+        }
+
+        .card h2 {
+            font-size: var(--text-lg);
+            margin-bottom: var(--space-4);
+            color: var(--text);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            letter-spacing: -0.01em;
+        }
+
+        .card h2::before {
+            content: "";
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: var(--radius-full);
+        }
+
+        /* 表单样式 - 更紧凑 */
+        .form-row {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-1);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-3);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        @media (max-width: 640px) {
+            .form-group {
+                min-width: 100%;
+                flex: 1 1 100%;
+            }
+        }
+
+        .form-group.full { flex: 100%; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-1);
+            font-weight: 500;
+            color: var(--text);
+            font-size: var(--text-base);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: var(--text-base);
+            line-height: 1.45;
+            transition: all 0.15s;
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            border-color: var(--text-muted);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* 现代化按钮 - 更紧凑 */
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: var(--text-base);
+            font-weight: 600;
+            line-height: 1.2;
+            margin-right: var(--space-2);
+            margin-bottom: var(--space-2);
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            white-space: nowrap;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--text-inverse);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--text-inverse);
+        }
+        .btn-success:hover {
+            background: #059669;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--text-inverse);
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-secondary {
+            background: var(--bg-subtle);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--border-subtle);
+            border-color: var(--text-muted);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--text-inverse);
+        }
+        .btn-warning:hover {
+            background: #d97706;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: var(--text-inverse);
+        }
+        .btn-info:hover {
+            background: #0891b2;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: var(--text-sm);
+        }
+
+        .btn-lg {
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--text-lg);
+        }
+
+        /* 表格样式 - 更紧凑 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin: 0 calc(-1 * var(--space-1));
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+            font-size: var(--text-base);
+            line-height: 1.45;
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            background: var(--bg-subtle);
+            font-weight: 600;
+            font-size: var(--text-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        tr:hover { background: var(--bg-subtle); }
+
+        tr:last-child td { border-bottom: none; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .actions { 
+            white-space: nowrap;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .actions { 
+                flex-direction: column;
+                gap: 4px;
+            }
+            .actions .btn {
+                margin: 0;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Toast 通知 - 更紧凑 */
+        .toast {
+            position: fixed;
+            top: var(--space-4);
+            right: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius);
+            color: var(--text-inverse);
+            z-index: 1000;
+            animation: slideIn 0.25s ease;
+            font-weight: 500;
+            font-size: var(--text-base);
+            box-shadow: var(--shadow-lg);
+            max-width: min(400px, 90vw);
+            word-wrap: break-word;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%) scale(0.95); opacity: 0; }
+            to { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        .toast-success {
+            background: var(--success);
+        }
+
+        .toast-error {
+            background: var(--danger);
+        }
+
+        .toast-warning {
+            background: var(--warning);
+        }
+
+        .toast-info {
+            background: var(--info);
+        }
+
+        /* 模态框 - 更紧凑 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 0;
+            border-radius: var(--radius-lg);
+            max-width: 560px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlide 0.2s ease;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-10px) scale(0.98); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4) var(--space-5);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .modal-header h3 {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: var(--space-4) var(--space-5);
+        }
+
+        @media (max-width: 640px) {
+            .modal-body { padding: var(--space-3); }
+            .modal-header { padding: var(--space-3) var(--space-4); }
+            .modal.show { padding: var(--space-3); }
+        }
+
+        .close-btn {
+            font-size: var(--text-xl);
+            cursor: pointer;
+            color: var(--text-muted);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+        }
+
+        .close-btn:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        /* 文章卡片 */
+        .entry-card {
+            background: linear-gradient(135deg, var(--source-soft, rgba(255, 255, 255, 0)) 0%, var(--card-bg) 42%);
+            border: 1px solid var(--source-border, var(--border));
+            border-left: 4px solid var(--source-color, var(--border));
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .entry-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+            border-color: var(--source-color, var(--primary-light));
+        }
+
+        .entry-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            line-height: 1.4;
+        }
+
+        .entry-title a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .entry-title a:hover {
+            color: var(--source-color, var(--primary));
+        }
+
+        .entry-meta {
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .entry-summary {
+            background: var(--source-soft, var(--primary-subtle));
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-sm);
+            margin-top: var(--space-2);
+            border-left: 3px solid var(--source-color, var(--primary));
+            font-size: var(--text-base);
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .entry-summary::before {
+            content: "🤖 AI总结";
+            display: block;
+            font-weight: 600;
+            color: var(--source-color, var(--primary-dark));
+            margin-bottom: var(--space-2);
+            font-size: var(--text-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entry-content {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: var(--space-3);
+            background: linear-gradient(180deg, rgba(255,255,255,0.75) 0%, var(--bg) 100%);
+            border-radius: var(--radius-sm);
+            margin-top: var(--space-2);
+            font-size: var(--text-base);
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .source-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: var(--radius-full);
+            background: var(--source-soft-strong, var(--bg-subtle));
+            border: 1px solid var(--source-border, var(--border));
+            color: var(--source-color, var(--text));
+            font-size: var(--text-sm);
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .source-chip::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: var(--radius-full);
+            background: var(--source-color, var(--primary));
+            box-shadow: 0 0 0 4px var(--source-soft, transparent);
+        }
+
+        .entry-actions {
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 640px) {
+            .entry-actions {
+                flex-direction: column;
+            }
+            .entry-actions .btn {
+                width: 100%;
+                margin: 0;
+                justify-content: center;
+            }
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            font-size: var(--text-base);
+            min-width: 140px;
+        }
+
+        .pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            font-weight: 600;
+            line-height: 1.15;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .pill::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: var(--radius-full);
+            background: currentColor;
+            opacity: 0.9;
+            flex-shrink: 0;
+        }
+
+        .pill.no-dot::before {
+            display: none;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .pill-cyan {
+            background: #cffafe;
+            border-color: #a5f3fc;
+            color: #0f766e;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .pill-purple {
+            background: #ede9fe;
+            border-color: #ddd6fe;
+            color: #6d28d9;
+        }
+
+        .pill-pink {
+            background: #fce7f3;
+            border-color: #fbcfe8;
+            color: #be185d;
+        }
+
+        .pill-indigo {
+            background: #e0e7ff;
+            border-color: #c7d2fe;
+            color: #4338ca;
+        }
+
+        .pill-slate {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+
+        .table-row-accent td {
+            vertical-align: top;
+        }
+
+        .table-row-accent td:first-child {
+            border-left: 3px solid var(--source-color, transparent);
+        }
+
+        .table-entity {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .table-subtext {
+            font-size: var(--text-sm);
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+
+        .table-subtext-danger {
+            color: var(--danger);
+        }
+
+        .table-link {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.2s ease;
+            min-width: 0;
+            display: inline-block;
+        }
+
+        .table-link:hover {
+            color: var(--primary);
+        }
+
+        .table-link.subtle {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .table-code {
+            font-family: var(--font-mono);
+            font-size: var(--text-sm);
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        /* 变量按钮 */
+        .var-btn {
+            display: inline-flex;
+            padding: var(--space-1) var(--space-2);
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            margin: var(--space-1);
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .var-btn:hover {
+            background: var(--primary-subtle);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        /* 预览项 */
+        .preview-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .preview-item h4 {
+            font-size: var(--text-base);
+            margin-bottom: var(--space-1);
+            color: var(--text);
+        }
+
+        .preview-item p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary); 
+            margin-bottom: var(--space-2);
+            line-height: 1.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--text-secondary);
+            font-size: var(--text-base);
+        }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            margin-left: var(--space-2);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 版本概览 */
+        .overview-list {
+            display: grid;
+            gap: var(--space-2);
+        }
+
+        .overview-item {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--source-border, var(--border));
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 4px);
+            background: linear-gradient(135deg, var(--source-soft, rgba(255, 255, 255, 0)) 0%, var(--bg-elevated) 38%);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .overview-item::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 3px;
+            background: var(--source-color, var(--primary));
+        }
+
+        .overview-item:hover {
+            border-color: var(--source-color, var(--primary-light));
+            box-shadow: var(--shadow), 0 16px 36px -28px var(--source-glow, rgba(59, 130, 246, 0.22));
+            transform: translateY(-1px);
+        }
+
+        .overview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-2);
+        }
+
+        .overview-source {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: var(--text-base);
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: var(--source-color, var(--text));
+        }
+
+        .overview-source::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: var(--radius-full);
+            background: var(--source-color, var(--primary));
+            box-shadow: 0 0 0 3px var(--source-soft, transparent);
+            flex-shrink: 0;
+        }
+
+        .overview-url {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            line-height: 1.35;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: min(100%, 720px);
+        }
+
+        .overview-url a,
+        .overview-version a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .overview-url a:hover,
+        .overview-version a:hover {
+            color: var(--source-color, var(--primary));
+        }
+
+        .overview-meta {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .overview-meta .pill {
+            max-width: 100%;
+        }
+
+        .overview-block {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            background: var(--bg-subtle);
+            margin-bottom: var(--space-2);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .overview-grid .overview-block {
+            margin-bottom: 0;
+        }
+
+        .overview-stat {
+            background: linear-gradient(180deg, var(--source-soft-strong, var(--primary-subtle)) 0%, #ffffff 100%);
+            border-color: var(--source-border, rgba(59, 130, 246, 0.18));
+        }
+
+        .overview-stat.secondary {
+            background: linear-gradient(180deg, var(--source-soft, var(--bg-subtle)) 0%, #ffffff 100%);
+            border-color: var(--source-border, var(--border));
+        }
+
+        .overview-label {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .overview-stat .overview-label {
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .overview-version {
+            font-size: var(--text-base);
+            font-weight: 600;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .overview-stat .overview-version {
+            font-size: var(--text-base);
+        }
+
+        .overview-version-title {
+            margin-top: 4px;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            font-weight: 400;
+            line-height: 1.35;
+        }
+
+        .overview-version-title strong {
+            color: var(--text);
+        }
+
+        .overview-summary-row {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--space-2);
+            align-items: start;
+            padding: 10px 12px;
+            border: 1px solid var(--source-border, var(--border));
+            border-radius: var(--radius-sm);
+            background: linear-gradient(180deg, rgba(255,255,255,0.72) 0%, var(--source-soft, var(--bg-subtle)) 100%);
+        }
+
+        .overview-inline-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+            background: var(--source-soft-strong, var(--bg-subtle));
+            color: var(--source-color, var(--text));
+            font-size: var(--text-xs);
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .overview-summary {
+            line-height: 1.5;
+            color: var(--text);
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: var(--text-sm);
+        }
+
+        .overview-summary.empty {
+            color: var(--text-secondary);
+        }
+
+        .overview-error {
+            font-size: var(--text-xs);
+            color: var(--danger);
+            background: var(--danger-subtle);
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            line-height: 1.4;
+        }
+
+        .overview-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: var(--space-6) 0;
+        }
+
+        @media (max-width: 640px) {
+            .overview-item {
+                padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 3px);
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .overview-meta .pill {
+                white-space: normal;
+            }
+
+            .overview-summary-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 登录页 */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            padding: var(--space-4);
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 480px) {
+            .login-box { padding: var(--space-6) var(--space-4); }
+        }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: var(--space-6);
+            color: var(--text);
+            font-size: var(--text-xl);
+            font-weight: 700;
+        }
+
+        .login-box h2::before {
+            content: "🔐";
+            display: block;
+            font-size: var(--text-2xl);
+            margin-bottom: var(--space-3);
+        }
+
+        .login-box .form-group { margin-bottom: var(--space-4); }
+
+        .login-box input {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-base);
+            transition: all 0.2s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .login-box .btn {
+            width: 100%;
+            padding: var(--space-3);
+            font-size: var(--text-base);
+            margin: 0;
+            justify-content: center;
+        }
+        
+        /* 设置弹窗 */
+        .settings-section {
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-5);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .settings-section h4 {
+            font-size: var(--text-base);
+            color: var(--text);
+            margin-bottom: var(--space-3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .cache-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .cache-stat {
+            background: var(--bg);
+            padding: var(--space-4);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .cache-stat .count {
+            font-size: var(--text-xl);
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .cache-stat .label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+            font-weight: 500;
+        }
+
+        .cache-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .cache-buttons .btn {
+            flex: 1; 
+            min-width: 140px; 
+            margin: 0;
+            justify-content: center;
+        }
+
+        @media (max-width: 480px) {
+            .cache-buttons .btn {
+                min-width: 100%;
+            }
+        }
+
+        /* 复选框 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* 头部按钮组 */
+        .header > div {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 640px) {
+            .header > div {
+                width: 100%;
+                justify-content: center;
+            }
+            .header .btn {
+                flex: 1;
+                min-width: 100px;
+                margin: 0;
+                justify-content: center;
+            }
+        }
+
+        /* GitHub 地址智能提示 */
+        .github-hint {
+            margin-top: var(--space-2);
+            padding: var(--space-3);
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .github-hint .hint-icon {
+            margin-right: var(--space-1);
+        }
+
+        .github-hint .hint-text {
+            color: #92400e;
+            font-weight: 500;
+        }
+
+        .github-hint .hint-options {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .btn-hint {
+            background: #f59e0b !important;
+            color: white !important;
+            margin: 0 !important;
+        }
+
+        .btn-hint:hover {
+            background: #d97706 !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-hint-secondary {
+            background: #f3f4f6 !important;
+            color: #6b7280 !important;
+            margin: 0 !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        .btn-hint-secondary:hover {
+            background: #e5e7eb !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="login-container" style="display:flex;">
+        <div class="login-box">
+            <h2>RSS订阅系统</h2>
+            <form onsubmit="return handleLogin(event)">
+                <div class="form-group">
+                    <input type="password" id="login-password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+            <p id="login-error" style="color:#e74c3c;text-align:center;margin-top:15px;display:none;"></p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" class="container" style="display:none;">
+        <div class="header">
+            <h1>RSS订阅系统</h1>
+            <div>
+                <button class="btn btn-success" onclick="collectNow()">立即采集</button>
+                <button class="btn btn-warning" onclick="showSettings()">设置</button>
+                <button class="btn btn-secondary" onclick="handleLogout()">退出</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showPanel('sources')">RSS源管理</button>
+            <button class="tab" onclick="showPanel('overview')">版本概览</button>
+            <button class="tab" onclick="showPanel('entries')">文章列表</button>
+            <button class="tab" onclick="showPanel('notify')">通知配置</button>
+            <button class="tab" onclick="showPanel('ai')">AI配置</button>
+            <button class="tab" onclick="showPanel('logs')">通知日志</button>
+        </div>
+
+        <div id="sources-panel" class="panel active">
+            <div class="card">
+                <h2>添加RSS源</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>名称</label>
+                        <input type="text" id="source-name" placeholder="例如：技术博客">
+                    </div>
+                    <div class="form-group" style="flex: 2;">
+                        <label>RSS地址</label>
+                        <input type="text" id="source-url" placeholder="https://example.com/feed.xml" oninput="checkGithubUrl()">
+                        <div id="github-hint" class="github-hint" style="display:none;">
+                            <span class="hint-icon">💡</span>
+                            <span class="hint-text">检测到 GitHub 仓库地址，是否转为订阅地址？</span>
+                            <div class="hint-options">
+                                <button type="button" class="btn btn-sm btn-hint" onclick="convertGithubUrl('releases')">Releases</button>
+                                <button type="button" class="btn btn-sm btn-hint" onclick="convertGithubUrl('commits')">Commits</button>
+                                <button type="button" class="btn btn-sm btn-hint" onclick="convertGithubUrl('tags')">Tags</button>
+                                <button type="button" class="btn btn-sm btn-hint-secondary" onclick="hideGithubHint()">忽略</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>采集间隔（分钟）</label>
+                        <input type="number" id="source-interval" value="30" min="5">
+                    </div>
+                    <div class="form-group">
+                        <label>通知通道</label>
+                        <select id="source-notify" multiple style="height: 80px;"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>启用</label>
+                        <div class="checkbox-group" style="margin-top: 10px;">
+                            <input type="checkbox" id="source-enabled" checked>
+                            <span>启用采集</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addSource()">添加</button>
+                <button class="btn btn-secondary" onclick="testSource()">测试连接</button>
+            </div>
+
+            <div class="card">
+                <h2>RSS源列表</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>地址</th>
+                            <th>间隔</th>
+                            <th>通知</th>
+                            <th>状态</th>
+                            <th>最后检查</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sources-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="overview-panel" class="panel">
+            <div class="card">
+                <h2>RSS源最新版本</h2>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4);">
+                    <p style="color:var(--text-secondary);font-size:var(--text-sm);">按最新版更新时间倒序显示每个 RSS 源的最新版、最新版更新时间和最后一条 AI 总结。</p>
+                    <button class="btn btn-secondary" onclick="loadSourceOverview()">刷新概览</button>
+                </div>
+                <div id="overview-list" class="overview-list"></div>
+            </div>
+        </div>
+
+        <div id="entries-panel" class="panel">
+            <div class="card">
+                <h2>文章列表</h2>
+                <div class="filter-bar">
+                    <label>按源筛选：</label>
+                    <select id="entry-filter" onchange="loadEntries()">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div id="entries-list"></div>
+            </div>
+        </div>
+
+        <div id="notify-panel" class="panel">
+            <div class="card">
+                <h2>添加通知配置</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>名称</label>
+                        <input type="text" id="notify-name" placeholder="例如：企业微信通知">
+                    </div>
+                    <div class="form-group">
+                        <label>类型</label>
+                        <select id="notify-type" onchange="updateNotifyForm()">
+                            <option value="webhook">企业微信Webhook</option>
+                            <option value="post">POST请求</option>
+                            <option value="get">GET请求</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label>URL地址</label>
+                        <input type="text" id="notify-url" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
+                    </div>
+                </div>
+                <div id="notify-headers-group" class="form-group" style="display:none">
+                    <label>请求头（JSON格式）</label>
+                    <textarea id="notify-headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+                </div>
+                <div id="notify-body-group" class="form-group" style="display:none">
+                    <label>请求体模板</label>
+                    <div style="margin-bottom: 8px;">
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Title}}')">标题</span>
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Content}}')">内容</span>
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Link}}')">链接</span>
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Source}}')">来源</span>
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Summary}}')">摘要</span>
+                        <span class="var-btn" onclick="insertVar('notify-body', '{{Time}}')">时间</span>
+                    </div>
+                    <textarea id="notify-body" placeholder="使用上方变量按钮插入变量"></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="notify-enabled" checked>
+                        <span>启用</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addNotify()">添加</button>
+                <button class="btn btn-secondary" onclick="testNotify()">测试通知</button>
+            </div>
+
+            <div class="card">
+                <h2>通知配置列表</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>类型</th>
+                            <th>URL</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notify-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="ai-panel" class="panel">
+            <div class="card">
+                <h2>添加AI配置</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>名称</label>
+                        <input type="text" id="ai-name" placeholder="例如：OpenAI官方">
+                    </div>
+                    <div class="form-group">
+                        <label>服务商/SDK</label>
+                        <select id="ai-provider" onchange="updateAIForm()">
+                            <option value="openai">OpenAI (@ai-sdk/openai)</option>
+                            <option value="openai-compatible">OpenAI兼容 (@ai-sdk/openai-compatible)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>API地址</label>
+                        <input type="text" id="ai-url" placeholder="https://api.openai.com/v1">
+                        <div class="help-text" style="font-size:var(--text-sm);color:var(--text-muted);">OpenAI格式: https://api.openai.com/v1</div>
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" id="ai-key" placeholder="sk-xxx">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>模型（多个用逗号分隔，轮询使用）</label>
+                        <input type="text" id="ai-models" value="gpt-3.5-turbo" placeholder="gpt-3.5-turbo, gpt-4">
+                    </div>
+                    <div class="form-group">
+                        <label>最大Token数</label>
+                        <input type="number" id="ai-tokens" value="500" min="100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>优先级（数字越大越优先）</label>
+                        <input type="number" id="ai-priority" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>故障转移备用配置</label>
+                        <select id="ai-failover">
+                            <option value="">无</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="ai-default">
+                            <span>设为默认</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="ai-enabled" checked>
+                            <span>启用</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="addAI()">添加</button>
+                <button class="btn btn-secondary" onclick="testAI()">测试连接</button>
+            </div>
+
+            <div class="card">
+                <h2>AI配置列表</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>SDK</th>
+                            <th>模型</th>
+                            <th>优先级</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ai-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="logs-panel" class="panel">
+            <div class="card">
+                <h2>通知日志</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>RSS源</th>
+                            <th>通知通道</th>
+                            <th>标题</th>
+                            <th>状态</th>
+                            <th>错误信息</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">编辑</h3>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let allNotifyChannels = [];
+        let allSources = [];
+        let allAIConfigs = [];
+
+        function showPanel(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(name + '-panel').classList.add('active');
+            event.target.classList.add('active');
+
+            if (name === 'sources') loadSources();
+            else if (name === 'overview') loadSourceOverview();
+            else if (name === 'entries') { loadSources(); loadEntries(); }
+            else if (name === 'notify') loadNotify();
+            else if (name === 'ai') loadAI();
+            else if (name === 'logs') loadLogs();
+        }
+
+        function toast(msg, type = 'success') {
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        async function api(method, path, data) {
+            const opts = { method, headers: { 'Content-Type': 'application/json' } };
+            if (data) opts.body = JSON.stringify(data);
+            const res = await fetch(API + path, opts);
+            return res.json();
+        }
+
+        function insertVar(inputId, variable) {
+            const input = document.getElementById(inputId);
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            input.value = text.substring(0, start) + variable + text.substring(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + variable.length;
+        }
+
+        function getNotifyChannelNames(ids) {
+            if (!ids || ids.length === 0) return '全部';
+            return ids.map(id => {
+                const ch = allNotifyChannels.find(c => c.id === id);
+                return ch ? ch.name : id;
+            }).join(', ');
+        }
+
+        function formatDisplayDate(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+        }
+
+        function getDateTimestamp(value) {
+            if (!value) return 0;
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+        }
+
+        const SOURCE_THEMES = [
+            { color: '#2563eb', soft: 'rgba(37, 99, 235, 0.08)', softStrong: 'rgba(37, 99, 235, 0.15)', border: 'rgba(37, 99, 235, 0.24)', glow: 'rgba(37, 99, 235, 0.28)' },
+            { color: '#7c3aed', soft: 'rgba(124, 58, 237, 0.08)', softStrong: 'rgba(124, 58, 237, 0.15)', border: 'rgba(124, 58, 237, 0.24)', glow: 'rgba(124, 58, 237, 0.28)' },
+            { color: '#db2777', soft: 'rgba(219, 39, 119, 0.08)', softStrong: 'rgba(219, 39, 119, 0.15)', border: 'rgba(219, 39, 119, 0.24)', glow: 'rgba(219, 39, 119, 0.28)' },
+            { color: '#ea580c', soft: 'rgba(234, 88, 12, 0.08)', softStrong: 'rgba(234, 88, 12, 0.15)', border: 'rgba(234, 88, 12, 0.24)', glow: 'rgba(234, 88, 12, 0.28)' },
+            { color: '#059669', soft: 'rgba(5, 150, 105, 0.08)', softStrong: 'rgba(5, 150, 105, 0.15)', border: 'rgba(5, 150, 105, 0.24)', glow: 'rgba(5, 150, 105, 0.28)' },
+            { color: '#0891b2', soft: 'rgba(8, 145, 178, 0.08)', softStrong: 'rgba(8, 145, 178, 0.15)', border: 'rgba(8, 145, 178, 0.24)', glow: 'rgba(8, 145, 178, 0.28)' },
+            { color: '#4f46e5', soft: 'rgba(79, 70, 229, 0.08)', softStrong: 'rgba(79, 70, 229, 0.15)', border: 'rgba(79, 70, 229, 0.24)', glow: 'rgba(79, 70, 229, 0.28)' },
+            { color: '#ca8a04', soft: 'rgba(202, 138, 4, 0.08)', softStrong: 'rgba(202, 138, 4, 0.15)', border: 'rgba(202, 138, 4, 0.24)', glow: 'rgba(202, 138, 4, 0.28)' }
+        ];
+
+        function hashString(value) {
+            let hash = 0;
+            const text = String(value || '');
+            for (let i = 0; i < text.length; i++) {
+                hash = ((hash << 5) - hash) + text.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
+        }
+
+        function getSourceTheme(seed) {
+            const themeIndex = hashString(seed) % SOURCE_THEMES.length;
+            return SOURCE_THEMES[themeIndex];
+        }
+
+        function getSourceThemeStyle(seed) {
+            const theme = getSourceTheme(seed);
+            return `--source-color:${theme.color};--source-soft:${theme.soft};--source-soft-strong:${theme.softStrong};--source-border:${theme.border};--source-glow:${theme.glow};`;
+        }
+
+        function truncateText(value, maxLength = 120) {
+            if (!value) return '';
+            return value.length > maxLength ? value.substring(0, maxLength) + '...' : value;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function renderSourceChip(label, seed = label) {
+            if (!label) return '';
+            return `<span class="source-chip" style="${getSourceThemeStyle(seed)}">${escapeHtml(label)}</span>`;
+        }
+
+        function renderPill(label, tone = 'slate', options = {}) {
+            const { title = '', showDot = true } = options;
+            const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+            return `<span class="pill pill-${tone}${showDot ? '' : ' no-dot'}"${titleAttr}>${escapeHtml(label)}</span>`;
+        }
+
+        function renderStatusPill(enabled, labels = { on: '启用', off: '禁用' }) {
+            return renderPill(enabled ? labels.on : labels.off, enabled ? 'green' : 'red');
+        }
+
+        function renderNotifyTypePill(type) {
+            const meta = {
+                webhook: { label: '企业微信', tone: 'cyan' },
+                post: { label: 'POST', tone: 'purple' },
+                get: { label: 'GET', tone: 'amber' }
+            }[type] || { label: String(type || '未知').toUpperCase(), tone: 'slate' };
+
+            return renderPill(meta.label, meta.tone);
+        }
+
+        function renderNotifyChannelPills(ids) {
+            if (!ids || ids.length === 0) {
+                return renderPill('全部通道', 'slate', { showDot: false });
+            }
+
+            return ids.map(id => {
+                const channel = allNotifyChannels.find(c => c.id === id);
+                return renderPill(channel ? channel.name : `通道 ${id}`, 'indigo', { showDot: false });
+            }).join('');
+        }
+
+        function renderAIProviderPill(provider) {
+            const meta = {
+                'openai': { label: 'OpenAI', tone: 'blue' },
+                'openai-compatible': { label: 'OpenAI兼容', tone: 'cyan' }
+            }[provider] || { label: provider || '未知', tone: 'slate' };
+
+            return renderPill(meta.label, meta.tone);
+        }
+
+        function renderPriorityPill(priority) {
+            const normalized = Number(priority) || 0;
+            return renderPill(`P${normalized}`, normalized > 0 ? 'purple' : 'slate', {
+                showDot: false,
+                title: `优先级 ${normalized}`
+            });
+        }
+
+        function renderAIStatePills(config) {
+            const pills = [
+                renderStatusPill(config.enabled)
+            ];
+
+            if (config.isDefault) {
+                pills.push(renderPill('默认', 'blue', { showDot: false }));
+            }
+
+            if (config.isFailover) {
+                pills.push(renderPill('故障转移', 'amber', { showDot: false }));
+            }
+
+            return pills.join('');
+        }
+
+        async function loadSources() {
+            const [sources, notifies] = await Promise.all([
+                api('GET', '/sources'),
+                api('GET', '/notify')
+            ]);
+            allSources = sources;
+            allNotifyChannels = notifies;
+
+            // Update notify select for sources
+            const notifySelect = document.getElementById('source-notify');
+            notifySelect.innerHTML = notifies.map(c => 
+                `<option value="${c.id}">${c.name}</option>`
+            ).join('');
+
+            // Update entries filter
+            const filter = document.getElementById('entry-filter');
+            filter.innerHTML = '<option value="">全部</option>' + 
+                sources.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            // Render sources table
+            const tbody = document.getElementById('sources-list');
+            tbody.innerHTML = sources.map(s => {
+                const sourceStyle = getSourceThemeStyle(s.name || s.id);
+                const lastCheckText = s.lastCheck ? new Date(s.lastCheck).toLocaleString() : '从未检查';
+                const errorHtml = s.lastError
+                    ? `<div class="table-subtext table-subtext-danger">错误：${escapeHtml(truncateText(s.lastError, 36))}</div>`
+                    : '';
+                const displayUrl = toProjectHomeUrl(s.url);
+
+                return `
+                <tr class="table-row-accent" style="${sourceStyle}">
+                    <td>
+                        <div class="table-entity">
+                            ${renderSourceChip(s.name, s.name || s.id)}
+                            ${errorHtml}
+                        </div>
+                    </td>
+                    <td><a class="table-link table-code subtle" href="${escapeHtml(displayUrl)}" target="_blank" title="${escapeHtml(displayUrl)}">${escapeHtml(truncateText(displayUrl, 54))}</a></td>
+                    <td>${renderPill(`${s.interval} 分钟`, 'blue', { showDot: false, title: '采集间隔' })}</td>
+                    <td><div class="pill-group">${renderNotifyChannelPills(s.notifyChannelIds)}</div></td>
+                    <td><div class="pill-group">${renderStatusPill(s.enabled)}</div></td>
+                    <td><div class="table-subtext">${escapeHtml(lastCheckText)}</div></td>
+                    <td class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="editSource(${s.id})">编辑</button>
+                        <button class="btn btn-warning btn-sm" onclick="previewSource(${s.id})">预览</button>
+                        <button class="btn btn-success btn-sm" onclick="testSourceWorkflow(${s.id})">测试流程</button>
+                        <button class="btn btn-secondary btn-sm" onclick="clearSourceEntries(${s.id}, '${s.name}')">清理</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSource(${s.id})">删除</button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        async function loadSourceOverview() {
+            const container = document.getElementById('overview-list');
+            container.innerHTML = '<div class="loading">正在加载概览...</div>';
+
+            const items = await api('GET', '/sources/overview');
+            if (items.error) {
+                container.innerHTML = `<p style="color:var(--danger);">加载失败: ${escapeHtml(items.error)}</p>`;
+                return;
+            }
+
+            if (!Array.isArray(items) || items.length === 0) {
+                container.innerHTML = '<div class="overview-empty">暂无RSS源，请先添加后再查看概览。</div>';
+                return;
+            }
+
+            const sortedItems = [...items].sort((a, b) => {
+                const aTime = getDateTimestamp(a.latestEntry ? (a.latestEntry.pubDate || a.latestEntry.createdAt) : '');
+                const bTime = getDateTimestamp(b.latestEntry ? (b.latestEntry.pubDate || b.latestEntry.createdAt) : '');
+                if (aTime !== bTime) return bTime - aTime;
+                if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
+                return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
+            });
+
+            container.innerHTML = sortedItems.map(item => {
+                const entry = item.latestEntry;
+                const sourceSeed = item.name || item.id;
+                const sourceStyle = getSourceThemeStyle(sourceSeed);
+                const lastCheckText = item.lastCheck ? formatDisplayDate(item.lastCheck) : '从未检查';
+                const latestVersionTime = entry ? formatDisplayDate(entry.pubDate || entry.createdAt) : '暂无更新记录';
+                const summaryRaw = entry && entry.summary ? entry.summary : '暂无 AI 总结';
+                const summaryText = escapeHtml(summaryRaw);
+                const displayUrl = toProjectHomeUrl(item.url);
+                const summaryClass = entry && entry.summary ? 'overview-summary' : 'overview-summary empty';
+                const summaryTime = entry && entry.summaryUpdatedAt
+                    ? renderPill(`总结 ${formatDisplayDate(entry.summaryUpdatedAt)}`, 'indigo', { showDot: false })
+                    : '';
+                const aiStatus = entry
+                    ? renderPill(entry.summary ? 'AI 已总结' : 'AI 未总结', entry.summary ? 'green' : 'amber', { showDot: false })
+                    : renderPill('暂无内容', 'slate', { showDot: false });
+                const metaPills = [
+                    renderPill(`检查 ${lastCheckText}`, 'slate', { showDot: false }),
+                    aiStatus,
+                    summaryTime
+                ].filter(Boolean).join('');
+                const versionHtml = entry ? `
+                    <div class="overview-grid">
+                        <div class="overview-block overview-stat">
+                            <div class="overview-label">最新版</div>
+                            <div class="overview-version"><a href="${escapeHtml(entry.link)}" target="_blank">${escapeHtml(entry.version)}</a></div>
+                            ${entry.title && entry.title !== entry.version ? `<div class="overview-version-title" title="${escapeHtml(entry.title)}">${escapeHtml(truncateText(entry.title, 96))}</div>` : ''}
+                        </div>
+                        <div class="overview-block overview-stat secondary">
+                            <div class="overview-label">最新版更新时间</div>
+                            <div class="overview-version">${escapeHtml(latestVersionTime)}</div>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="overview-grid">
+                        <div class="overview-block overview-stat">
+                            <div class="overview-label">最新版</div>
+                            <div class="overview-version">暂无已采集内容</div>
+                        </div>
+                        <div class="overview-block overview-stat secondary">
+                            <div class="overview-label">最新版更新时间</div>
+                            <div class="overview-version">暂无更新记录</div>
+                        </div>
+                    </div>
+                `;
+                const errorHtml = item.lastError ? `<div class="overview-error">最近检查错误：${escapeHtml(item.lastError)}</div>` : '';
+
+                return `
+                    <div class="overview-item" style="${sourceStyle}">
+                        <div class="overview-header">
+                            <div>
+                                <div class="overview-source">${escapeHtml(item.name)}</div>
+                                <div class="overview-url"><a href="${escapeHtml(displayUrl)}" target="_blank" title="${escapeHtml(displayUrl)}">${escapeHtml(displayUrl)}</a></div>
+                            </div>
+                            ${renderStatusPill(item.enabled)}
+                        </div>
+                        <div class="overview-meta">${metaPills}</div>
+                        ${versionHtml}
+                        <div class="overview-summary-row" title="${escapeHtml(summaryRaw)}">
+                            <span class="overview-inline-label">AI 总结</span>
+                            <div class="${summaryClass}">${summaryText}</div>
+                        </div>
+                        ${errorHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function addSource() {
+            const notifySelect = document.getElementById('source-notify');
+            const selectedNotify = Array.from(notifySelect.selectedOptions).map(o => parseInt(o.value));
+            
+            const data = {
+                name: document.getElementById('source-name').value,
+                url: document.getElementById('source-url').value,
+                interval: parseInt(document.getElementById('source-interval').value),
+                notifyChannelIds: selectedNotify,
+                enabled: document.getElementById('source-enabled').checked
+            };
+            if (!data.name || !data.url) return toast('请填写完整信息', 'error');
+            const res = await api('POST', '/sources', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('添加成功');
+            document.getElementById('source-name').value = '';
+            document.getElementById('source-url').value = '';
+            loadSources();
+            loadSourceOverview();
+        }
+
+        // 将 GitHub 订阅地址（releases.atom / commits.atom / tags.atom 等）转为项目首页地址
+        function toProjectHomeUrl(rawUrl) {
+            try {
+                const urlObj = new URL(rawUrl);
+                if (urlObj.hostname !== 'github.com' && urlObj.hostname !== 'www.github.com') {
+                    return rawUrl;
+                }
+                if (!/\.(atom|rss|xml)$/i.test(urlObj.pathname)) {
+                    return rawUrl;
+                }
+                const pathParts = urlObj.pathname.split('/').filter(p => p);
+                if (pathParts.length < 2) return rawUrl;
+                return `https://github.com/${pathParts[0]}/${pathParts[1]}/`;
+            } catch (e) {
+                return rawUrl;
+            }
+        }
+
+        // GitHub URL 智能检测相关变量
+        let detectedGithubRepo = null;
+
+        /**
+         * 检测是否为 GitHub 仓库地址（非 RSS 订阅地址）
+         * 匹配模式：github.com/{owner}/{repo} 或 github.com/{owner}/{repo}/
+         * 排除：
+         *   - 已经是 .atom 结尾的 RSS 地址
+         *   - issues, pulls, wiki, actions, settings, projects 等页面
+         *   - blob, tree, commit 等代码浏览页面
+         *   - 包含 releases.atom, commits.atom, tags.atom 等订阅地址
+         */
+        function checkGithubUrl() {
+            const urlInput = document.getElementById('source-url');
+            const hintDiv = document.getElementById('github-hint');
+            const url = urlInput.value.trim();
+
+            // 隐藏提示
+            hintDiv.style.display = 'none';
+            detectedGithubRepo = null;
+
+            if (!url) return;
+
+            try {
+                const urlObj = new URL(url);
+
+                // 必须是 github.com 域名
+                if (urlObj.hostname !== 'github.com' && urlObj.hostname !== 'www.github.com') {
+                    return;
+                }
+
+                // 解析路径
+                const pathParts = urlObj.pathname.split('/').filter(p => p);
+
+                // 需要至少 owner/repo 两部分
+                if (pathParts.length < 2) return;
+
+                const owner = pathParts[0];
+                const repo = pathParts[1];
+
+                // 排除特殊页面
+                const excludePages = ['issues', 'pulls', 'pull', 'wiki', 'actions', 'settings',
+                                      'projects', 'security', 'insights', 'pulse', 'graphs',
+                                      'network', 'stargazers', 'watchers', 'forks'];
+
+                // 排除代码浏览路径
+                const codePaths = ['blob', 'tree', 'commit', 'commits', 'releases', 'tags',
+                                   'branches', 'archive', 'tarball', 'zipball', 'compare',
+                                   'milestone', 'labels', 'milestones', 'discussions'];
+
+                // 如果有第三部分路径，检查是否需要排除
+                if (pathParts.length >= 3) {
+                    const thirdPart = pathParts[2].toLowerCase();
+
+                    // 如果已经是 RSS 订阅地址（以 .atom 结尾），不提示
+                    if (url.toLowerCase().endsWith('.atom')) {
+                        return;
+                    }
+
+                    // 如果是排除的页面，不提示
+                    if (excludePages.includes(thirdPart) || codePaths.includes(thirdPart)) {
+                        // 但 releases 和 commits 页面本身可能是用户想订阅的
+                        // 如果路径是 releases 或 commits 但不是 .atom，可以提示
+                        if (thirdPart === 'releases' || thirdPart === 'commits' || thirdPart === 'tags') {
+                            // 如果路径长度为3，说明是列表页面，可以提示转为 RSS
+                            if (pathParts.length === 3) {
+                                detectedGithubRepo = { owner, repo };
+                                hintDiv.style.display = 'block';
+                                return;
+                            }
+                        }
+                        return;
+                    }
+                }
+
+                // 纯仓库地址（owner/repo 或 owner/repo/）
+                // 或者带有其他不认识的路径（可能是自定义页面）
+                detectedGithubRepo = { owner, repo };
+                hintDiv.style.display = 'block';
+
+            } catch (e) {
+                // URL 解析失败，忽略
+            }
+        }
+
+        /**
+         * 转换 GitHub 仓库地址为 RSS 订阅地址
+         * @param {string} type - 'releases' | 'commits' | 'tags'
+         */
+        function convertGithubUrl(type) {
+            if (!detectedGithubRepo) return;
+
+            const { owner, repo } = detectedGithubRepo;
+            const urlInput = document.getElementById('source-url');
+
+            let newUrl = '';
+            let feedName = '';
+
+            switch (type) {
+                case 'releases':
+                    newUrl = `https://github.com/${owner}/${repo}/releases.atom`;
+                    feedName = 'Releases';
+                    break;
+                case 'commits':
+                    newUrl = `https://github.com/${owner}/${repo}/commits.atom`;
+                    feedName = 'Commits';
+                    break;
+                case 'tags':
+                    newUrl = `https://github.com/${owner}/${repo}/tags.atom`;
+                    feedName = 'Tags';
+                    break;
+            }
+
+            urlInput.value = newUrl;
+
+            // 自动填充名称（如果为空）
+            const nameInput = document.getElementById('source-name');
+            if (!nameInput.value.trim()) {
+                nameInput.value = `${owner}/${repo} ${feedName}`;
+            }
+
+            // 隐藏提示
+            hideGithubHint();
+
+            toast(`已转换为 ${feedName} 订阅地址`);
+        }
+
+        /**
+         * 隐藏 GitHub 提示
+         */
+        function hideGithubHint() {
+            document.getElementById('github-hint').style.display = 'none';
+            detectedGithubRepo = null;
+        }
+
+        async function testSource() {
+            const url = document.getElementById('source-url').value;
+            if (!url) return toast('请输入RSS地址', 'error');
+            toast('正在测试连接...');
+            const res = await api('POST', '/sources/test', { url });
+            if (res.error) return toast('连接失败: ' + res.error, 'error');
+            toast(`连接成功: ${res.title} (${res.count}篇文章)`);
+        }
+
+        async function testSourceWorkflow(id) {
+            const source = allSources.find(s => s.id === id);
+            if (!source) return;
+            
+            // Show progress modal
+            document.getElementById('modal-title').textContent = `测试流程: ${source.name}`;
+            document.getElementById('modal-body').innerHTML = `
+                <div id="workflow-progress">
+                    <div class="progress-step" id="step-fetch">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">检查RSS更新...</span>
+                    </div>
+                    <div class="progress-step" id="step-summary" style="opacity:0.5">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">AI总结中...</span>
+                        <span class="step-detail" id="summary-detail"></span>
+                    </div>
+                    <div class="progress-step" id="step-notify" style="opacity:0.5">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">发送通知...</span>
+                    </div>
+                    <div class="progress-step" id="step-done" style="opacity:0.5">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">完成</span>
+                    </div>
+                </div>
+                <style>
+                    .progress-step { padding: 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+                    .progress-step.active { background: #e3f2fd; opacity: 1 !important; }
+                    .progress-step.done { opacity: 1 !important; }
+                    .progress-step.done .step-icon { color: #27ae60; }
+                    .step-icon { font-size: var(--text-lg); }
+                    .step-text { font-weight: 500; }
+                    .step-detail { color: var(--text-muted); font-size: var(--text-sm); margin-left: auto; }
+                </style>
+            `;
+            document.getElementById('modal').classList.add('show');
+            
+            // Update step status helper
+            const updateStep = (stepId, status, detail = '') => {
+                const step = document.getElementById(stepId);
+                if (!step) return;
+                const icon = step.querySelector('.step-icon');
+                const detailEl = step.querySelector('.step-detail');
+                
+                step.style.opacity = '1';
+                if (status === 'active') {
+                    step.classList.add('active');
+                    icon.textContent = '🔄';
+                } else if (status === 'done') {
+                    step.classList.remove('active');
+                    step.classList.add('done');
+                    icon.textContent = '✅';
+                } else if (status === 'error') {
+                    step.classList.remove('active');
+                    icon.textContent = '❌';
+                    step.style.color = '#e74c3c';
+                }
+                if (detail && detailEl) detailEl.textContent = detail;
+            };
+            
+            try {
+                // Step 1: Fetch
+                updateStep('step-fetch', 'active');
+                const res = await api('POST', `/sources/test-workflow/${id}`);
+                
+                if (res.error) {
+                    updateStep('step-fetch', 'error', res.error);
+                    return;
+                }
+                
+                if (!res.hasUpdates) {
+                    updateStep('step-fetch', 'done');
+                    updateStep('step-summary', 'done', '跳过（无新更新）');
+                    updateStep('step-notify', 'done', '跳过');
+                    updateStep('step-done', 'done');
+                    document.getElementById('step-done').querySelector('.step-text').textContent = '没有新更新';
+                    return;
+                }
+                
+                updateStep('step-fetch', 'done', `发现 ${res.newCount} 条更新`);
+                
+                // Step 2: Summary (already done in API)
+                updateStep('step-summary', 'active');
+                await new Promise(r => setTimeout(r, 500)); // Small delay for UX
+                updateStep('step-summary', 'done', `已总结 ${res.items.length} 条`);
+                
+                // Step 3: Notify
+                updateStep('step-notify', 'active');
+                await new Promise(r => setTimeout(r, 500));
+                
+                if (res.notifyResults && res.notifyResults.length > 0) {
+                    const successCount = res.notifyResults.filter(r => r.success).length;
+                    updateStep('step-notify', 'done', `${successCount}/${res.notifyResults.length} 成功`);
+                } else {
+                    updateStep('step-notify', 'done', '已发送');
+                }
+                
+                // Step 4: Done - show results
+                updateStep('step-done', 'done');
+                
+                // Show detailed results after a moment
+                const itemsHtml = res.items.map(item => `
+                    <div class="preview-item" style="margin-top:10px;border:1px solid #eee;padding:10px;border-radius:8px;">
+                        <h4 style="margin:0 0 5px 0;font-size:var(--text-base);"><a href="${escapeHtml(item.link)}" target="blank">${escapeHtml(item.title)}</a></h4>
+                        ${item.summary ? `<div class="entry-summary" style="margin-top:8px;font-size:var(--text-sm);">${escapeHtml(item.summary)}</div>` : ''}
+                    </div>
+                `).join('');
+                
+                setTimeout(() => {
+                    document.getElementById('modal-body').innerHTML += `
+                        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
+                            <h4 style="margin:0 0 10px 0;">更新详情</h4>
+                            ${itemsHtml}
+                        </div>
+                        <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:15px;">关闭</button>
+                    `;
+                }, 500);
+                
+            } catch (error) {
+                updateStep('step-fetch', 'error', '请求失败');
+                console.error(error);
+            }
+        }
+
+        async function editSource(id) {
+            const source = allSources.find(s => s.id === id);
+            if (!source) return;
+
+            const notifyOptions = allNotifyChannels.map(c => 
+                `<option value="${c.id}" ${source.notifyChannelIds && source.notifyChannelIds.includes(c.id) ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+            ).join('');
+
+            document.getElementById('modal-title').textContent = '编辑RSS源';
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="edit-source-name" value="${escapeHtml(source.name)}">
+                </div>
+                <div class="form-group">
+                    <label>RSS地址</label>
+                    <input type="text" id="edit-source-url" value="${escapeHtml(source.url)}">
+                </div>
+                <div class="form-group">
+                    <label>采集间隔（分钟）</label>
+                    <input type="number" id="edit-source-interval" value="${source.interval}">
+                </div>
+                <div class="form-group">
+                    <label>通知通道</label>
+                    <select id="edit-source-notify" multiple style="height: 80px;">${notifyOptions}</select>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="edit-source-enabled" ${source.enabled ? 'checked' : ''}>
+                        <span>启用</span>
+                    </div>
+                </div>
+                <input type="hidden" id="edit-source-id" value="${source.id}">
+                <button class="btn btn-primary" onclick="saveSource()">保存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            `;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        async function saveSource() {
+            const id = parseInt(document.getElementById('edit-source-id').value);
+            const notifySelect = document.getElementById('edit-source-notify');
+            const selectedNotify = Array.from(notifySelect.selectedOptions).map(o => parseInt(o.value));
+            
+            const data = {
+                id,
+                name: document.getElementById('edit-source-name').value,
+                url: document.getElementById('edit-source-url').value,
+                interval: parseInt(document.getElementById('edit-source-interval').value),
+                notifyChannelIds: selectedNotify,
+                enabled: document.getElementById('edit-source-enabled').checked,
+                lastCheck: null,
+                lastError: null,
+                createdAt: ''
+            };
+            const res = await api('PUT', '/sources', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('保存成功');
+            closeModal();
+            loadSources();
+            loadSourceOverview();
+        }
+
+        async function previewSource(id) {
+            const source = allSources.find(s => s.id === id);
+            if (!source) return;
+
+            document.getElementById('modal-title').textContent = `预览: ${source.name}`;
+            document.getElementById('modal-body').innerHTML = '<div class="loading">正在加载...</div>';
+            document.getElementById('modal').classList.add('show');
+
+            const res = await api('POST', `/sources/preview/${id}`, {});
+            if (res.error) {
+                document.getElementById('modal-body').innerHTML = `<p style="color:red">加载失败: ${res.error}</p>`;
+                return;
+            }
+
+            const itemsHtml = res.items.map((item, i) => `
+                <div class="preview-item">
+                    <h4><a href="${escapeHtml(item.link)}" target="_blank">${escapeHtml(item.title)}</a></h4>
+                    <p>${escapeHtml(item.description.substring(0, 200))}${item.description.length > 200 ? '...' : ''}</p>
+                    <div>
+                        <button class="btn btn-primary btn-sm" onclick="summarizePreviewItem(${i}, '${encodeURIComponent(item.title)}', '${encodeURIComponent(item.content || item.description)}')">AI总结</button>
+                        <span id="preview-summary-${i}"></span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-body').innerHTML = `
+                <p style="margin-bottom: 15px;"><strong>${escapeHtml(res.title)}</strong> - 共 ${res.count} 篇文章，显示前10篇</p>
+                ${itemsHtml}
+                <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 15px;">关闭</button>
+            `;
+            
+            window.previewItems = res.items;
+        }
+
+        async function summarizePreviewItem(index, titleEnc, contentEnc) {
+            const title = decodeURIComponent(titleEnc);
+            const content = decodeURIComponent(contentEnc);
+            const summaryEl = document.getElementById(`preview-summary-${index}`);
+            summaryEl.innerHTML = ' <span style="color:#888">正在总结...</span>';
+            
+            const res = await api('POST', '/summarize', { title, content });
+            if (res.error) {
+                summaryEl.innerHTML = ` <span style="color:red">失败: ${escapeHtml(res.error)}</span>`;
+                return;
+            }
+            summaryEl.innerHTML = '</div><div class="entry-summary" style="margin-top:10px">' + escapeHtml(res.summary) + '</div>';
+        }
+
+        async function clearSourceEntries(id, name) {
+            // Get entry count first
+            const stats = await api('GET', `/sources/${id}/stats`);
+            const count = stats.entryCount || 0;
+            
+            if (count === 0) {
+                return toast('没有可清理的记录');
+            }
+            
+            if (!confirm(`确定清理「${name}」的 ${count} 条已保存记录？\n清理后可以重新获取更新。`)) return;
+            
+            const res = await api('DELETE', `/sources/${id}/entries`);
+            if (res.error) return toast(res.error, 'error');
+            toast(res.message || `已清理 ${res.deletedCount} 条记录`);
+            loadSources();
+            loadSourceOverview();
+        }
+
+        async function deleteSource(id) {
+            if (!confirm('确定删除？相关文章也会被删除。')) return;
+            await api('DELETE', '/sources', { id });
+            toast('已删除');
+            loadSources();
+            loadSourceOverview();
+        }
+
+        async function loadEntries() {
+            const sourceId = document.getElementById('entry-filter').value;
+            const entries = await api('GET', `/entries?limit=50${sourceId ? '&sourceId=' + sourceId : ''}`);
+            const container = document.getElementById('entries-list');
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;padding:40px;">暂无文章</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(e => {
+                const entryMeta = [
+                    e.sourceName ? renderSourceChip(e.sourceName, e.sourceName || e.sourceId) : '',
+                    e.author ? renderPill(`作者: ${escapeHtml(e.author)}`, 'slate', { showDot: false }) : '',
+                    renderPill(`发布: ${escapeHtml(new Date(e.pubDate).toLocaleString())}`, 'blue', { showDot: false }),
+                    e.summarized ? renderPill('已总结', 'green', { showDot: false }) : '',
+                    e.notified ? renderPill('已通知', 'cyan', { showDot: false }) : ''
+                ].filter(Boolean).join('');
+
+                return `
+                <div class="entry-card" style="${getSourceThemeStyle(e.sourceName || e.sourceId)}">
+                    <div class="entry-title"><a href="${escapeHtml(e.link)}" target="_blank">${escapeHtml(e.title)}</a></div>
+                    <div class="entry-meta">${entryMeta}</div>
+                    ${e.summary ? `<div class="entry-summary">${escapeHtml(e.summary)}</div>` : ''}
+                    ${e.description ? `<div class="entry-content">${escapeHtml(e.description)}</div>` : ''}
+                    <div class="entry-actions">
+                        <button class="btn btn-primary btn-sm" onclick="previewEntry(${e.id})">预览详情</button>
+                        ${!e.summarized ? `<button class="btn btn-warning btn-sm" onclick="summarizeEntry(${e.id})">AI总结</button>` : ''}
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        async function previewEntry(id) {
+            const entry = await api('GET', `/entries/${id}`);
+            if (entry.error) return toast(entry.error, 'error');
+
+            document.getElementById('modal-title').textContent = entry.title;
+            document.getElementById('modal-body').innerHTML = `
+                <p style="margin-bottom:10px"><a href="${escapeHtml(entry.link)}" target="_blank">打开原文</a></p>
+                ${entry.summary ? `<div class="entry-summary">${escapeHtml(entry.summary)}</div>` : ''}
+                <div class="entry-content" style="max-height: 400px;">${escapeHtml(entry.content || entry.description || '无内容')}</div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary btn-sm" onclick="summarizeEntry(${id}, true)">AI总结</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+                </div>
+            `;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        async function summarizeEntry(id, inModal = false) {
+            toast('正在AI总结...');
+            const res = await api('POST', `/entries/${id}/summarize`);
+            if (res.error) return toast('总结失败: ' + res.error, 'error');
+            toast('AI总结完成');
+            if (inModal) {
+                const entry = await api('GET', `/entries/${id}`);
+                const summaryDiv = document.querySelector('.entry-summary') || document.createElement('div');
+                summaryDiv.className = 'entry-summary';
+                summaryDiv.textContent = entry.summary;
+                if (!document.querySelector('.entry-summary')) {
+                    document.querySelector('.entry-content').before(summaryDiv);
+                }
+            }
+            loadEntries();
+            loadSourceOverview();
+        }
+
+        let isCollecting = false;
+        
+        async function collectNow() {
+            if (isCollecting) return;
+            isCollecting = true;
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '采集中...';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            
+            try {
+                const res = await api('POST', '/collect');
+                toast(res.message);
+                
+                // Show collecting progress
+                document.getElementById('modal-title').textContent = '采集进度';
+                document.getElementById('modal-body').innerHTML = `
+                    <div id="collect-progress">
+                        <div style="text-align:center;padding:20px;">
+                            <div style="font-size:40px;margin-bottom:10px;">🔄</div>
+                            <p>正在采集RSS源...</p>
+                            <p id="collect-status" style="color:#888;font-size:var(--text-sm);">请稍候...</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal').classList.add('show');
+                
+                // Poll for completion (simple version - wait and reload)
+                await new Promise(r => setTimeout(r, 3000));
+                
+                document.getElementById('collect-status').textContent = '采集完成，正在刷新...';
+                await new Promise(r => setTimeout(r, 500));
+                
+                closeModal();
+                loadSources();
+                loadEntries();
+                loadSourceOverview();
+                toast('采集完成');
+                
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                isCollecting = false;
+            }
+        }
+
+        async function clearAllCache() {
+            if (!confirm('确定清理全部数据？包括文章、通知日志和摘要缓存！')) return;
+            const res = await api('POST', '/cache/clear-all');
+            if (res.error) return toast(res.error, 'error');
+            toast(res.message);
+            showSettings(); // 刷新统计
+        }
+
+        async function clearSummaryCache() {
+            if (!confirm('确定清理所有AI摘要缓存？清理后下次总结会重新调用AI。')) return;
+            const res = await api('POST', '/cache/clear-summary');
+            if (res.error) return toast(res.error, 'error');
+            toast(res.message || `已清理 ${res.count} 条摘要`);
+            showSettings();
+        }
+
+        async function clearNotifyLogs() {
+            if (!confirm('确定清理所有通知日志？')) return;
+            const res = await api('POST', '/cache/clear-logs');
+            if (res.error) return toast(res.error, 'error');
+            toast(res.message || `已清理 ${res.count} 条日志`);
+            showSettings();
+        }
+        function updateNotifyForm() {
+            const type = document.getElementById('notify-type').value;
+            document.getElementById('notify-headers-group').style.display = type !== 'webhook' ? 'block' : 'none';
+            document.getElementById('notify-body-group').style.display = type === 'post' ? 'block' : 'none';
+        }
+
+        async function loadNotify() {
+            const configs = await api('GET', '/notify');
+            allNotifyChannels = configs;
+            const tbody = document.getElementById('notify-list');
+            tbody.innerHTML = configs.map(c => `
+                <tr class="table-row-accent" style="${getSourceThemeStyle(`notify-${c.id}`)}">
+                    <td>${renderSourceChip(c.name, `notify-${c.id}`)}</td>
+                    <td><div class="pill-group">${renderNotifyTypePill(c.type)}</div></td>
+                    <td><a class="table-link table-code subtle" href="${escapeHtml(c.url)}" target="_blank" title="${escapeHtml(c.url)}">${escapeHtml(truncateText(c.url, 46))}</a></td>
+                    <td><div class="pill-group">${renderStatusPill(c.enabled)}</div></td>
+                    <td class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="editNotify(${c.id})">编辑</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteNotify(${c.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function editNotify(id) {
+            const config = allNotifyChannels.find(c => c.id === id);
+            if (!config) return;
+
+            document.getElementById('modal-title').textContent = '编辑通知配置';
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="edit-notify-name" value="${escapeHtml(config.name)}">
+                </div>
+                <div class="form-group">
+                    <label>类型</label>
+                    <select id="edit-notify-type" onchange="updateEditNotifyForm()">
+                        <option value="webhook" ${config.type === 'webhook' ? 'selected' : ''}>企业微信Webhook</option>
+                        <option value="post" ${config.type === 'post' ? 'selected' : ''}>POST请求</option>
+                        <option value="get" ${config.type === 'get' ? 'selected' : ''}>GET请求</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>URL地址</label>
+                    <input type="text" id="edit-notify-url" value="${escapeHtml(config.url)}">
+                </div>
+                <div class="form-group" id="edit-notify-headers-group" style="${config.type !== 'webhook' ? '' : 'display:none'}">
+                    <label>请求头（JSON格式）</label>
+                    <textarea id="edit-notify-headers">${escapeHtml(config.headers || '')}</textarea>
+                </div>
+                <div class="form-group" id="edit-notify-body-group" style="${config.type === 'post' ? '' : 'display:none'}">
+                    <label>请求体模板</label>
+                    <textarea id="edit-notify-body">${escapeHtml(config.bodyTemplate || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="edit-notify-enabled" ${config.enabled ? 'checked' : ''}>
+                        <span>启用</span>
+                    </div>
+                </div>
+                <input type="hidden" id="edit-notify-id" value="${config.id}">
+                <button class="btn btn-primary" onclick="saveNotify()">保存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            `;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function updateEditNotifyForm() {
+            const type = document.getElementById('edit-notify-type').value;
+            document.getElementById('edit-notify-headers-group').style.display = type !== 'webhook' ? 'block' : 'none';
+            document.getElementById('edit-notify-body-group').style.display = type === 'post' ? 'block' : 'none';
+        }
+
+        async function saveNotify() {
+            const id = parseInt(document.getElementById('edit-notify-id').value);
+            const data = {
+                id,
+                name: document.getElementById('edit-notify-name').value,
+                type: document.getElementById('edit-notify-type').value,
+                url: document.getElementById('edit-notify-url').value,
+                headers: document.getElementById('edit-notify-headers').value,
+                bodyTemplate: document.getElementById('edit-notify-body').value,
+                enabled: document.getElementById('edit-notify-enabled').checked
+            };
+            const res = await api('PUT', '/notify', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('保存成功');
+            closeModal();
+            loadNotify();
+        }
+
+        async function addNotify() {
+            const data = {
+                name: document.getElementById('notify-name').value,
+                type: document.getElementById('notify-type').value,
+                url: document.getElementById('notify-url').value,
+                headers: document.getElementById('notify-headers').value,
+                bodyTemplate: document.getElementById('notify-body').value,
+                enabled: document.getElementById('notify-enabled').checked
+            };
+            if (!data.name || !data.url) return toast('请填写完整信息', 'error');
+            const res = await api('POST', '/notify', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('添加成功');
+            loadNotify();
+        }
+
+        async function testNotify() {
+            const data = {
+                name: document.getElementById('notify-name').value || '测试',
+                type: document.getElementById('notify-type').value,
+                url: document.getElementById('notify-url').value,
+                headers: document.getElementById('notify-headers').value,
+                bodyTemplate: document.getElementById('notify-body').value
+            };
+            if (!data.url) return toast('请输入URL', 'error');
+            toast('正在发送测试通知...');
+            const res = await api('POST', '/notify/test', data);
+            if (res.error) return toast('测试失败: ' + res.error, 'error');
+            toast('通知发送成功');
+        }
+
+        async function deleteNotify(id) {
+            if (!confirm('确定删除？')) return;
+            await api('DELETE', '/notify', { id });
+            toast('已删除');
+            loadNotify();
+        }
+
+        function updateAIForm() {
+            const provider = document.getElementById('ai-provider').value;
+            const urlInput = document.getElementById('ai-url');
+            if (provider === 'openai') {
+                urlInput.placeholder = 'https://api.openai.com/v1';
+            } else {
+                urlInput.placeholder = 'https://your-api-endpoint/v1';
+            }
+        }
+
+        async function loadAI() {
+            const configs = await api('GET', '/ai');
+            allAIConfigs = configs;
+            
+            // Update failover select
+            const failoverSelect = document.getElementById('ai-failover');
+            failoverSelect.innerHTML = '<option value="">无</option>' + 
+                configs.filter(c => c.enabled).map(c => 
+                    `<option value="${c.id}">${c.name}</option>`
+                ).join('');
+            
+            const tbody = document.getElementById('ai-list');
+            tbody.innerHTML = configs.map(c => {
+                const modelsHtml = (c.models || [c.model]).map(m =>
+                    renderPill(m, 'purple', { showDot: false, title: m })
+                ).join('');
+                
+                return `
+                <tr class="table-row-accent" style="${getSourceThemeStyle(`ai-${c.id}`)}">
+                    <td>${renderSourceChip(c.name, `ai-${c.id}`)}</td>
+                    <td><div class="pill-group">${renderAIProviderPill(c.provider)}</div></td>
+                    <td><div class="pill-group">${modelsHtml}</div></td>
+                    <td>${renderPriorityPill(c.priority || 0)}</td>
+                    <td><div class="pill-group">${renderAIStatePills(c)}</div></td>
+                    <td class="actions">
+                        <button class="btn btn-primary btn-sm" onclick="editAI(${c.id})">编辑</button>
+                        <button class="btn btn-warning btn-sm" onclick="testAIById(${c.id})">测试</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAI(${c.id})">删除</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        async function editAI(id) {
+            const config = allAIConfigs.find(c => c.id === id);
+            if (!config) return;
+
+            const models = config.models || [config.model];
+            const failoverOptions = allAIConfigs.filter(c => c.id !== id && c.enabled).map(c => 
+                `<option value="${c.id}" ${config.failoverConfigId === c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+            ).join('');
+
+            document.getElementById('modal-title').textContent = '编辑AI配置';
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="edit-ai-name" value="${escapeHtml(config.name)}">
+                </div>
+                <div class="form-group">
+                    <label>服务商/SDK</label>
+                    <select id="edit-ai-provider">
+                        <option value="openai" ${config.provider === 'openai' ? 'selected' : ''}>OpenAI</option>
+                        <option value="openai-compatible" ${config.provider === 'openai-compatible' ? 'selected' : ''}>OpenAI兼容</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>API地址</label>
+                    <input type="text" id="edit-ai-url" value="${escapeHtml(config.apiUrl)}">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="edit-ai-key" value="${escapeHtml(config.apiKey)}">
+                </div>
+                <div class="form-group">
+                    <label>模型（多个用逗号分隔）</label>
+                    <input type="text" id="edit-ai-models" value="${escapeHtml(models.join(', '))}">
+                </div>
+                <div class="form-group">
+                    <label>最大Token数</label>
+                    <input type="number" id="edit-ai-tokens" value="${escapeHtml(String(config.maxTokens))}">
+                </div>
+                <div class="form-group">
+                    <label>优先级</label>
+                    <input type="number" id="edit-ai-priority" value="${escapeHtml(String(config.priority || 0))}">
+                </div>
+                <div class="form-group">
+                    <label>故障转移备用配置</label>
+                    <select id="edit-ai-failover">
+                        <option value="">无</option>
+                        ${failoverOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="edit-ai-default" ${config.isDefault ? 'checked' : ''}>
+                        <span>设为默认</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="edit-ai-enabled" ${config.enabled ? 'checked' : ''}>
+                        <span>启用</span>
+                    </div>
+                </div>
+                <input type="hidden" id="edit-ai-id" value="${config.id}">
+                <button class="btn btn-primary" onclick="saveAI()">保存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            `;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        async function saveAI() {
+            const id = parseInt(document.getElementById('edit-ai-id').value);
+            const modelsStr = document.getElementById('edit-ai-models').value;
+            const models = modelsStr.split(',').map(m => m.trim()).filter(m => m);
+            
+            const data = {
+                id,
+                name: document.getElementById('edit-ai-name').value,
+                provider: document.getElementById('edit-ai-provider').value,
+                apiUrl: document.getElementById('edit-ai-url').value,
+                apiKey: document.getElementById('edit-ai-key').value,
+                models: models.length > 0 ? models : ['gpt-3.5-turbo'],
+                maxTokens: parseInt(document.getElementById('edit-ai-tokens').value),
+                priority: parseInt(document.getElementById('edit-ai-priority').value) || 0,
+                failoverConfigId: document.getElementById('edit-ai-failover').value ? parseInt(document.getElementById('edit-ai-failover').value) : null,
+                isFailover: !!document.getElementById('edit-ai-failover').value,
+                isDefault: document.getElementById('edit-ai-default').checked,
+                enabled: document.getElementById('edit-ai-enabled').checked
+            };
+            
+            const res = await api('PUT', '/ai', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('保存成功');
+            closeModal();
+            loadAI();
+        }
+
+        async function addAI() {
+            const modelsStr = document.getElementById('ai-models').value;
+            const models = modelsStr.split(',').map(m => m.trim()).filter(m => m);
+            
+            const data = {
+                name: document.getElementById('ai-name').value,
+                provider: document.getElementById('ai-provider').value,
+                apiUrl: document.getElementById('ai-url').value,
+                apiKey: document.getElementById('ai-key').value,
+                models: models.length > 0 ? models : ['gpt-3.5-turbo'],
+                maxTokens: parseInt(document.getElementById('ai-tokens').value),
+                priority: parseInt(document.getElementById('ai-priority').value) || 0,
+                failoverConfigId: document.getElementById('ai-failover').value ? parseInt(document.getElementById('ai-failover').value) : null,
+                isFailover: !!document.getElementById('ai-failover').value,
+                isDefault: document.getElementById('ai-default').checked,
+                enabled: document.getElementById('ai-enabled').checked
+            };
+            if (!data.name || !data.apiUrl || !data.apiKey) return toast('请填写完整信息', 'error');
+            const res = await api('POST', '/ai', data);
+            if (res.error) return toast(res.error, 'error');
+            toast('添加成功');
+            loadAI();
+        }
+
+        async function testAI() {
+            const modelsStr = document.getElementById('ai-models').value;
+            const models = modelsStr.split(',').map(m => m.trim()).filter(m => m);
+            
+            const data = {
+                provider: document.getElementById('ai-provider').value,
+                apiUrl: document.getElementById('ai-url').value,
+                apiKey: document.getElementById('ai-key').value,
+                models: models.length > 0 ? models : ['gpt-3.5-turbo'],
+                maxTokens: 50
+            };
+            if (!data.apiUrl || !data.apiKey) return toast('请填写API信息', 'error');
+            toast('正在测试AI连接...');
+            const res = await api('POST', '/ai/test', data);
+            if (res.error) return toast('测试失败: ' + res.error, 'error');
+            toast('AI连接成功: ' + res.response);
+        }
+
+        async function testAIById(id) {
+            toast('正在测试AI连接...');
+            const res = await api('POST', `/ai/test/${id}`);
+            if (res.error) return toast('测试失败: ' + res.error, 'error');
+            toast('AI连接成功: ' + res.response);
+        }
+
+        async function deleteAI(id) {
+            if (!confirm('确定删除？')) return;
+            await api('DELETE', '/ai', { id });
+            toast('已删除');
+            loadAI();
+        }
+
+        async function loadLogs() {
+            const logs = await api('GET', '/notify/logs');
+            const tbody = document.getElementById('logs-list');
+
+            if (logs.error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:20px;">加载失败: ${escapeHtml(logs.error)}</td></tr>`;
+                return;
+            }
+
+            if (!Array.isArray(logs) || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无通知日志</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(l => {
+                const rowSeed = l.sourceName || l.notifyConfigName || `log-${l.id}`;
+                const sourceHtml = l.sourceName
+                    ? renderSourceChip(l.sourceName, l.sourceName || l.sourceId || `source-${l.id}`)
+                    : renderPill('未知RSS源', 'slate', { showDot: false });
+                const notifyHtml = l.notifyConfigName
+                    ? renderSourceChip(l.notifyConfigName, `notify-${l.notifyConfigId || l.notifyConfigName}`)
+                    : renderPill('未知通道', 'slate', { showDot: false });
+                const contentPreview = l.content
+                    ? `<div class="table-subtext" title="${escapeHtml(l.content)}">${escapeHtml(truncateText(l.content, 64))}</div>`
+                    : '';
+                const errorHtml = l.error
+                    ? `<div class="table-subtext table-subtext-danger" title="${escapeHtml(l.error)}">${escapeHtml(truncateText(l.error, 64))}</div>`
+                    : `<div class="pill-group">${renderPill('无错误', 'slate', { showDot: false })}</div>`;
+
+                return `
+                <tr class="table-row-accent" style="${getSourceThemeStyle(rowSeed)}">
+                    <td><div class="table-subtext">${escapeHtml(formatDisplayDate(l.createdAt))}</div></td>
+                    <td><div class="pill-group">${sourceHtml}</div></td>
+                    <td><div class="pill-group">${notifyHtml}</div></td>
+                    <td>
+                        <div class="table-entity">
+                            <strong title="${escapeHtml(l.title)}">${escapeHtml(truncateText(l.title, 42))}</strong>
+                            ${contentPreview}
+                        </div>
+                    </td>
+                    <td><div class="pill-group">${renderStatusPill(l.status === 'success', { on: '成功', off: '失败' })}</div></td>
+                    <td>${errorHtml}</td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        // Close modal on outside click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Initial load
+
+        // ============ 登录相关 ============
+        async function checkAuth() {
+            const res = await api('GET', '/auth/check');
+            if (res.authenticated) {
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                loadSources();
+                loadSourceOverview();
+            } else {
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            const res = await api('POST', '/auth/login', { password });
+            if (res.error) {
+                errorEl.textContent = res.error;
+                errorEl.style.display = 'block';
+                return false;
+            }
+            
+            errorEl.style.display = 'none';
+            document.getElementById('login-password').value = '';
+            checkAuth();
+            return false;
+        }
+
+        async function handleLogout() {
+            await api('POST', '/auth/logout');
+            checkAuth();
+        }
+
+        // ============ 设置弹窗 ============
+        async function showSettings() {
+            document.getElementById('modal-title').textContent = '系统设置';
+            document.getElementById('modal-body').innerHTML = '<div class="loading">加载中...</div>';
+            document.getElementById('modal').classList.add('show');
+            
+            const stats = await api('GET', '/cache/stats');
+            
+            document.getElementById('modal-body').innerHTML = `
+                <div class="settings-section">
+                    <h4>AI摘要缓存</h4>
+                    <div class="cache-stats">
+                        <div class="cache-stat">
+                            <div class="count">${stats.rssEntries || 0}</div>
+                            <div class="label">文章总数</div>
+                            <div class="label">文章总数</div>
+                        </div>
+                        <div class="cache-stat">
+                            <div class="count">${stats.notifyLogs || 0}</div>
+                            <div class="label">通知日志</div>
+                            <div class="label">已总结</div>
+                        </div>
+                        <div class="cache-stat">
+                            <div class="count">${stats.summaryCache || 0}</div>
+                            <div class="label">摘要缓存</div>
+                            <div class="label">缓存条目</div>
+                        </div>
+                    </div>
+                    <div class="cache-buttons">
+                        <button class="btn btn-warning" onclick="clearAllCache()">清理全部数据</button>
+                        <button class="btn btn-danger" onclick="clearSummaryCache()">仅清理摘要</button>
+                        <button class="btn btn-secondary" onclick="clearNotifyLogs()">仅清理日志</button>
+                </div>
+                <div class="settings-section">
+                    <h4>系统信息</h4>
+                    <p style="font-size:var(--text-sm);color:#666;">RSS订阅系统 v1.0</p>
+                    <p style="font-size:var(--text-sm);color:#666;">数据存储: SQLite</p>
+                </div>
+                <div style="margin-top:15px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+                </div>
+            `;
+        }
+
+        // Initial auth check
+        checkAuth();
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+node_modules
+dist
+data
+*.db
+*.log
+.git
+.gitignore
+.omc
+.omx
+README.md
+.env
+deploy.py

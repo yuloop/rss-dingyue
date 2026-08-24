@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Upload file to RSS server via SSH - 示例配置"""
+import paramiko
+import sys
+
+# Server config - 请替换为你的服务器信息
+host = "YOUR_SERVER_IP"
+user = "root"
+password = "YOUR_PASSWORD"
+port = 22
+
+# Local and remote paths - 请根据实际路径修改
+local_file = r"D:\your\path\rss_dingyue\web\static\index.html"
+remote_path = "/opt/rss-dingyue/web/static/index.html"
+
+try:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, port, user, password)
+
+    sftp = ssh.open_sftp()
+    sftp.put(local_file, remote_path)
+    sftp.close()
+
+    stdin, stdout, stderr = ssh.exec_command("docker restart rss-dingyue")
+    restart_output = stdout.read().decode()
+    restart_err = stderr.read().decode()
+
+    ssh.close()
+
+    print("[OK] File uploaded successfully")
+    print(f"[INFO] Remote path: {remote_path}")
+    print(f"[INFO] Container restart: {restart_output.strip()}")
+    if restart_err:
+        print(f"[WARN] Restart warning: {restart_err.strip()}")
+
+except Exception as e:
+    print(f"[ERROR] {e}")
+    sys.exit(1)

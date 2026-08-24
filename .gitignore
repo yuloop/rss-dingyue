@@ -1,0 +1,15 @@
+node_modules
+dist
+data/*
+!data/.gitkeep
+*.db
+*.log
+.env
+.env.local
+deploy.py
+.omc/
+.omx/
+.DS_Store
+Thumbs.db
+*.tmp
+npm-debug.log*
